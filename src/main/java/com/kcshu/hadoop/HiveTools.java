@@ -697,7 +697,9 @@ public class HiveTools{
             TreeItem sel = tree.getSelection()[0];
             String serverId = sel.getData().toString();
             Config.delServer(serverId);
-            reflushServiceTree();
+            sel.dispose();
+            //BUG 0001 ,删除后不能刷新树，不然已经打开的就关闭了
+            //reflushServiceTree();
         }
     }
 
