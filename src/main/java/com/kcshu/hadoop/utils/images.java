@@ -87,6 +87,7 @@ public class images{
         public static class table{
             public static final Image query = get("tab");
             public static final Image refresh = nul.refresh;
+            public static final Image attr = database.attr;
         }
     }
     

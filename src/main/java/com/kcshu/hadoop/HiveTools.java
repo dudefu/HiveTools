@@ -34,8 +34,10 @@ import com.kcshu.hadoop.domain.NodeType;
 import com.kcshu.hadoop.domain.Server;
 import com.kcshu.hadoop.service.ServerManager;
 import com.kcshu.hadoop.tab.QueryTab;
+import com.kcshu.hadoop.tab.DatabaseAttrTab;
 import com.kcshu.hadoop.tab.ShowFunctionsTab;
 import com.kcshu.hadoop.tab.Tab;
+import com.kcshu.hadoop.tab.TableAttrTab;
 import com.kcshu.hadoop.task.DescribeCallBack;
 import com.kcshu.hadoop.task.ShowDatabasesCallBack;
 import com.kcshu.hadoop.task.ShowTablesCallBack;
@@ -231,9 +233,7 @@ public class HiveTools{
             @Override
             public void widgetSelected(SelectionEvent e){
                 TreeItem item = tree.getSelection()[0];
-                ShowFunctionsTab functionsTab = new ShowFunctionsTab(tabFolder, item);
-                functionsTab.setImage(images.popmenu.server.functions);
-                tabFolder.setSelection(functionsTab);
+                tabFolder.setSelection(new ShowFunctionsTab(tabFolder, item));
             }
         });
         MenuItem attr = new MenuItem(serverPopMenuOpen, SWT.NONE);
@@ -241,7 +241,7 @@ public class HiveTools{
         attr.addSelectionListener(new SelectionAdapter(){
             @Override
             public void widgetSelected(SelectionEvent e){
-                // serverProperties();
+                
             }
         });
 
@@ -287,7 +287,6 @@ public class HiveTools{
         
         MenuItem newTab = new MenuItem(databasesPopMenu, SWT.NONE);
         newTab.setText(i18n.pop.database.newTab);
-        //attr.setImage(images.popmenu.database.attr);
         newTab.addSelectionListener(new SelectionAdapter(){
             @Override
             public void widgetSelected(SelectionEvent e){
@@ -363,11 +362,12 @@ public class HiveTools{
         
         MenuItem attr = new MenuItem(databasesPopMenu, SWT.NONE);
         attr.setText(i18n.pop.database.attr);
-        //attr.setImage(images.popmenu.database.attr);
+        attr.setImage(images.popmenu.database.attr);
         attr.addSelectionListener(new SelectionAdapter(){
             @Override
             public void widgetSelected(SelectionEvent e){
-                
+                TreeItem item = tree.getSelection()[0];
+                tabFolder.setSelection(new DatabaseAttrTab(tabFolder, item));
             }
         });
         
@@ -429,10 +429,11 @@ public class HiveTools{
 
         MenuItem attr = new MenuItem(tablePopMenu, SWT.NONE);
         attr.setText(i18n.pop.table.attr);
+        attr.setImage(images.popmenu.table.attr);
         attr.addSelectionListener(new SelectionAdapter(){
             @Override
             public void widgetSelected(SelectionEvent e){
-
+                tableAttributeTab();
             }
         });
 
@@ -448,6 +449,11 @@ public class HiveTools{
                 treeItemTableShow(treeItem);
             }
         });
+    }
+
+    protected void tableAttributeTab(){
+        TreeItem treeItem = tree.getSelection()[0];
+        tabFolder.setSelection(new TableAttrTab(tabFolder, treeItem));
     }
 
     /**
@@ -873,7 +879,9 @@ public class HiveTools{
             }
             break;
             case TABLE : {
-                //这个显示属性
+                if(refresh){
+                    tableAttributeTab();
+                }
             }break;
             default:
             break;

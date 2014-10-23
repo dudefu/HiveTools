@@ -30,7 +30,7 @@ public class SQLLineStyleListener implements LineStyleListener{
             "ALTER","DATABASE","STORED AS","LOCATION","PARTITION",
             "LOAD","DATA","LOCAL","OVERWRITE","INTO",
             "SHOW","TABLES",
-            "DROP","IF","EXISTS","SUM",
+            "DROP","IF","EXISTS","SUM","FORMATTED"
     };
 
     @Override

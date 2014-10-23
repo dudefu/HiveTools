@@ -12,10 +12,12 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.TreeItem;
 
+import com.kcshu.hadoop.domain.TabType;
 import com.kcshu.hadoop.service.ServerManager;
 import com.kcshu.hadoop.task.DescribeFunsCallBack;
 import com.kcshu.hadoop.task.ShowFunsCallBack;
 import com.kcshu.hadoop.utils.i18n;
+import com.kcshu.hadoop.utils.images;
 
 /**
  * 
@@ -55,6 +57,8 @@ public class ShowFunctionsTab extends AbstractTab{
     @Override
     public void afterInitView(){
         executeTask();
+        self.setData(TAB_TYPE, TabType.SHOW_FUNCTIONS);
+        self.setImage(images.popmenu.server.functions);
     }
     
     @Override
