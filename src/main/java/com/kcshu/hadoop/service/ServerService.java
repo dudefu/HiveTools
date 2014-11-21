@@ -51,12 +51,16 @@ public class ServerService{
      * @param back
      */
     public <V> UUID execute(final CallBack<V> back){
-        back.setServer(server);
         final UUID taskId = UUID.randomUUID();
+        back.setServer(server);
         Future<?> future = ServerManager.taskExecutor.submit(new Runnable(){
             @Override
             public void run(){
                 try{
+                    if( !ProxyServer.init().add(server) ) {
+                        back.onException(new Exception("未能代开代理地址"));
+                        return;
+                    }
                     final V out = back.call();
                     if(!Thread.interrupted()){ //未停止
                         Display.getDefault().syncExec(new Runnable(){
@@ -90,5 +94,21 @@ public class ServerService{
             }
             ServerManager.tasks.remove(uuid);
         }
+    }
+
+    public boolean test()
+    {
+        HiveServer hive = new HiveServer(getServer());
+        try {
+            hive.showDatabases();
+            return true;
+        }catch(Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    public void close() {
+        ProxyServer.init().close(server);
     }
 }

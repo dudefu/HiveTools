@@ -20,7 +20,7 @@ public class SQLLineStyleListener implements LineStyleListener{
             "SELECT", "FROM",
             "WHERE", "AND", "OR", "GROUP","HAVING","BY",
             "ORDER", "DESC",
-            "UNION",
+            "UNION","ALL",
             "LIMIT",
             "CREATE","TABLE",
             
@@ -30,7 +30,11 @@ public class SQLLineStyleListener implements LineStyleListener{
             "ALTER","DATABASE","STORED AS","LOCATION","PARTITION",
             "LOAD","DATA","LOCAL","OVERWRITE","INTO",
             "SHOW","TABLES",
-            "DROP","IF","EXISTS","SUM","FORMATTED"
+            "DROP","IF","EXISTS","SUM","FORMATTED",
+            
+            "LEFT","RIGHT","JOIN","OUTER",
+            
+            "NULL","=","<","+","-","*","/","%","&","||"
     };
 
     @Override

@@ -33,7 +33,7 @@ public class ServerManager{
         }
     }
 
-    public static final ServerService add(Server server){
+    public static final synchronized ServerService add(Server server){
         init();
         String id = server.getId();
         if(!services.containsKey(id)){
@@ -44,7 +44,10 @@ public class ServerManager{
     
     public static final void remove(String serverId){
         init();
-        services.remove(serverId);
+        ServerService service = services.remove(serverId);
+        if(service != null) {
+            service.close();
+        }
     }
 
     public static final ServerService get(String id){

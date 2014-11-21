@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.kcshu.hadoop</groupId>
 	<artifactId>hivetools</artifactId>
-	<version>0.0.1</version>
+	<version>0.1.2</version>
 	<name>HiveTools</name>
 	<description>Hive客户端工具台</description>
 
@@ -25,13 +25,17 @@
 			<artifactId>jface</artifactId>
 			<version>3.3.0-I20070606-0010</version>
 		</dependency>
-		
+		<dependency>
+			<groupId>com.jcraft</groupId>
+			<artifactId>jsch</artifactId>
+			<version>0.1.51</version>
+		</dependency>
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
 			<version>3.6</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.apache.hive</groupId>
 			<artifactId>hive-jdbc</artifactId>
@@ -58,7 +62,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		
+
 	</dependencies>
 
 	<build>

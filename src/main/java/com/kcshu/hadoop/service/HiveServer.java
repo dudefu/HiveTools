@@ -27,7 +27,13 @@ public class HiveServer{
     }
     protected Connection openConnect(String db) throws Exception{
         Class.forName("org.apache.hive.jdbc.HiveDriver");
-        String url = String.format("jdbc:hive2://%s:%s/%s", server.getHost(), server.getPort(),db);
+        String host = server.getHost();
+        int prot = server.getPort();
+        if(server.isUseSshProxy()) {
+            host = "localhost";
+            prot = server.getSshProxyPort();
+        }
+        String url = String.format("jdbc:hive2://%s:%d/%s",host,prot,db);
         Connection con = DriverManager.getConnection(url, server.getUser(), server.getPassword());
         return con;
     }
@@ -202,7 +208,7 @@ public class HiveServer{
     }
     
     public static void main(String[] args){
-        Server server = new Server("name", "192.168.0.215", "10000", "redunion", "zhouhaichao","123qwe");
+        Server server = new Server("name", "192.168.0.215", 10000, "redunion", "zhouhaichao","123qwe");
         HiveServer hiveServer = new HiveServer(server);
         try{
             System.out.println(hiveServer.loadGrid("redunion","select * from day_fr"));

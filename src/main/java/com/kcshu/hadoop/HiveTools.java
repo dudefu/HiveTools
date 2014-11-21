@@ -32,9 +32,10 @@ import com.kcshu.hadoop.dialog.AboutDialog;
 import com.kcshu.hadoop.dialog.AddServerDialog;
 import com.kcshu.hadoop.domain.NodeType;
 import com.kcshu.hadoop.domain.Server;
+import com.kcshu.hadoop.service.ProxyServer;
 import com.kcshu.hadoop.service.ServerManager;
-import com.kcshu.hadoop.tab.QueryTab;
 import com.kcshu.hadoop.tab.DatabaseAttrTab;
+import com.kcshu.hadoop.tab.QueryTab;
 import com.kcshu.hadoop.tab.ShowFunctionsTab;
 import com.kcshu.hadoop.tab.Tab;
 import com.kcshu.hadoop.tab.TableAttrTab;
@@ -134,6 +135,9 @@ public class HiveTools{
         shell.addListener(SWT.Close, new Listener(){
             public void handleEvent(Event event){
                 event.doit = exitApplication();
+                if(event.doit) {
+                    ProxyServer.init().close();
+                }
             }
         });
         shell.setText(i18n.display.title);
@@ -647,7 +651,6 @@ public class HiveTools{
     private void initTree(SashForm sashForm){
         tree = new Tree(sashForm, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
         tree.addSelectionListener(new SelectionAdapter(){
-
             @Override
             public void widgetSelected(SelectionEvent e){
                 treeItemSelected(false);
@@ -655,7 +658,6 @@ public class HiveTools{
         });
 
         tree.addMouseListener(new MouseAdapter(){
-
             @Override
             public void mouseDown(MouseEvent mouseEvent){
                 if(mouseEvent.count == 2){
@@ -931,6 +933,7 @@ public class HiveTools{
 
                 //如果为正在加载，直接返回不能重复加载不然就会出错
                 if(Boolean.TRUE.equals(serverItem.getData(NodeType.NODE_LOADING))){ return; }
+                
                 //设置为正在加载
                 serverItem.setImage(images.tree.loading);
                 serverItem.setData(NodeType.NODE_LOADING, true);

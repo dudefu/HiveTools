@@ -62,9 +62,10 @@ public class AboutDialog extends AbstractDialog {
 		lblNewLabel.setBounds(0, 0, 61, 17);
 		lblNewLabel.setText(i18n.dialog.about.headTitle);
 		
-		
 		Label label = new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL);
 		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
+		
+		//
 		new Label(composite, SWT.NONE);
 		
 		Label lblNewLabel_1 = new Label(composite, SWT.NONE);
@@ -72,31 +73,24 @@ public class AboutDialog extends AbstractDialog {
 		
 		Label lblNewLabel_2 = new Label(composite, SWT.NONE);
 		lblNewLabel_2.setText(i18n.dialog.about.versionNo);
+		//
 		new Label(composite, SWT.NONE);
-		
 		Label lblNewLabel_3 = new Label(composite, SWT.NONE);
 		lblNewLabel_3.setText(i18n.dialog.about.developer);
-		
 		Link link = new Link(composite, SWT.NONE);
 		link.addSelectionListener(openUrl);
 		link.setText(i18n.dialog.about.email);
+		//-
 		new Label(composite, SWT.NONE);
-		
 		Label lblReportIssue = new Label(composite, SWT.NONE);
 		lblReportIssue.setText(i18n.dialog.about.issue);
 		
 		Link link_1 = new Link(composite, SWT.NONE);
 		link_1.addSelectionListener(openUrl);
 		link_1.setText(i18n.dialog.about.issueClick);
+		
+		//-
 		new Label(composite, SWT.NONE);
-		
-		/*Label lblStar = new Label(composite, SWT.NONE);
-		lblStar.setText(i18n.dialog.about.star);
-		
-		Link link_2 = new Link(composite, SWT.NONE);
-		link_2.addSelectionListener(openUrl);
-		link_2.setText(i18n.dialog.about.starClick);*/
-		
 		Composite composite_1 = new Composite(shell, SWT.NONE);
 		composite_1.setLayout(new FillLayout(SWT.HORIZONTAL));
 		composite_1.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
