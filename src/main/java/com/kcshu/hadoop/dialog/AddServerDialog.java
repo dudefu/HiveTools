@@ -341,7 +341,7 @@ public class AddServerDialog extends AbstractDialog {
 		//所以此处直接给出一个TEST
 		server.setName(server.getName()+"_fortest");
 		
-		if( !ProxyServer.init().add(server) ) {
+		if( server.isUseSshProxy() && !ProxyServer.init().add(server) ) {
 		    MessageDialog.openError(shell,"错误","代理设置错误");
 		    return false;
 		}
