@@ -5,7 +5,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import com.kcshu.hadoop.export.Excel;
 import org.apache.commons.io.IOUtils;
@@ -60,6 +63,7 @@ public class QueryTab extends AbstractTab{
     private CTabFolder outDataTab;
 
     private String hqlFile = null;
+    private List<String> runningHsql = new ArrayList<>();
     public QueryTab(CTabFolder tabFolder, TreeItem item){
         super(tabFolder,item);
     }
@@ -88,7 +92,7 @@ public class QueryTab extends AbstractTab{
         executeAction = new SelectionAdapter(){
             @Override
             public void widgetSelected(SelectionEvent e){
-                if( taskId == null){
+                if( QueryTab.this.canClose() ){
                     executeTask();
                 }
                 else{
@@ -247,7 +251,7 @@ public class QueryTab extends AbstractTab{
         });
         inputCmd.addVerifyKeyListener(new VerifyKeyListener(){
             public void verifyKey(VerifyEvent event){
-                if(taskId != null){
+                if(!canClose()){
                     event.doit = false;
                 }
             }
@@ -352,9 +356,8 @@ public class QueryTab extends AbstractTab{
      */
     public SashForm getSashForm(){
         //取消SQL输入框最大化
-        Control[] childrens = tabFolder.getChildren();
-        Composite composite = (Composite)childrens[1];
-        childrens = composite.getChildren();
+        CTabItem  tabItem = tabFolder.getSelection();
+        Control[] childrens = ((Composite)tabItem.getControl()).getChildren();
         SashForm sashForm = (SashForm)childrens[1];
         return sashForm;
     }
@@ -367,37 +370,47 @@ public class QueryTab extends AbstractTab{
         open.setEnabled(false);
         export.setEnabled(false);
 
-        getSashForm().setMaximizedControl(null);
-
         for(CTabItem item : outDataTab.getItems()){
             item.dispose();
         }
 
-        //TODO 数据多条执行
-
         String hql = inputCmd.getText().trim();
-
-        CallBack<List<String[]>> back = new ExecuteCallBack(database,hql){
-            @Override
-            public void onData(List<String[]> param){
-                taskId = null;
-                intreputExecute();
-                showDataInTableColumn(param);
+        for (String sql : hql.split(";")){
+            if(!sql.trim().equals("")){
+                runningHsql.add(sql);
             }
-            @Override
-            public void onException(Exception e){
-                intreputExecute();
-                taskId = null;
-                String title = i18n.dialog.query.executed.title;
-                StringWriter writer = new StringWriter();
-                e.printStackTrace(new PrintWriter(writer));
-                MessageDialog.openError(tabFolder.getShell(), title, writer.toString());
-            }
-        };
-        taskId = ServerManager.get(getServerId()).execute(back);
+        }
+        runHql();
+    }
+    protected void runHql(){
+        if(runningHsql.size()==0){
+            intreputExecute();
+        }else{
+            String sql = runningHsql.remove(0);
+            CallBack<List<String[]>> back = new ExecuteCallBack(database,sql){
+                @Override
+                public void onData(List<String[]> param){
+                    showDataInTableColumn(param);
+                    taskIds.remove(0);
+                    runHql();
+                }
+                @Override
+                public void onException(Exception e){
+                    taskIds.remove(0);
+                    runHql();
+                    String title = i18n.dialog.query.executed.title;
+                    StringWriter writer = new StringWriter();
+                    e.printStackTrace(new PrintWriter(writer));
+                    MessageDialog.openError(tabFolder.getShell(), title, writer.toString());
+                }
+            };
+            taskIds.add(ServerManager.get(getServerId()).execute(back));
+        }
     }
 
     public void showDataInTableColumn(List<String[]> objs){
+        getSashForm().setMaximizedControl(null);
+
         CTabItem tabItem = new CTabItem(outDataTab, SWT.BORDER);
         tabItem.setShowClose(true);
         tabItem.setText("Out "+outDataTab.getItemCount());
@@ -458,7 +471,7 @@ public class QueryTab extends AbstractTab{
 
         stop.setEnabled(false);
         open.setEnabled(true);
-        export.setEnabled(false);
+        export.setEnabled(tabFolder.getItemCount()>0);
     }
     
     @Override

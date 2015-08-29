@@ -102,7 +102,7 @@ public class TableAttrTab extends AbstractTab{
         CallBack<List<String[]>> back = new ExecuteCallBack(database,hql){
             @Override
             public void onData(List<String[]> param){
-                taskId = null;
+                taskIds.clear();
                 param.remove(0);param.remove(0);param.remove(0);
                 
                 List<String[]> field = new ArrayList<String[]>();
@@ -139,12 +139,12 @@ public class TableAttrTab extends AbstractTab{
             }
             @Override
             public void onException(Exception e){
-                taskId = null;
+                taskIds.clear();
                 ExceptionUtil.show(tabFolder.getShell(),e);
                 intreputTask();
             }
         };
-        taskId = ServerManager.get(getServerId()).execute(back);
+        taskIds.add(ServerManager.get(getServerId()).execute(back));
     }
     
     public void showTableItem(Table table,List<String[]> items){

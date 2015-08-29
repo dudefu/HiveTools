@@ -62,7 +62,7 @@ public class DatabaseAttrTab extends AbstractTab{
         CallBack<List<String[]>> back = new ExecuteCallBack(database,hql){
             @Override
             public void onData(List<String[]> param){
-                taskId = null;
+                taskIds.clear();
                 String[] names = param.get(0);
                 String[] values = param.get(1);
                 for(int i = 0; i < names.length; i++){
@@ -73,12 +73,12 @@ public class DatabaseAttrTab extends AbstractTab{
             
             @Override
             public void onException(Exception e){
-                taskId = null;
+                taskIds.clear();
                 ExceptionUtil.show(tabFolder.getShell(),e);
                 intreputTask();
             }
         };
-        taskId = ServerManager.get(getServerId()).execute(back);
+        taskIds.add(ServerManager.get(getServerId()).execute(back));
     }
 
     /**

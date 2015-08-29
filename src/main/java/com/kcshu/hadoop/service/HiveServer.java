@@ -197,8 +197,8 @@ public class HiveServer{
                     grids.add(columns);
                 }
             }else{
-                grids.add(new String[]{"rows updated"});
-                grids.add(new String[]{String.valueOf(stat.getUpdateCount())});
+                grids.add(new String[]{"hql executed"});
+                grids.add(new String[]{" fetch "+stat.getUpdateCount()});
             }
             return grids;
         }finally{
