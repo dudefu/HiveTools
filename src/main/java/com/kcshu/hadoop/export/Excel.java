@@ -65,7 +65,6 @@ public class Excel extends Thread{
 
     /**
      * @param sheet
-     * @param data
      */
     public void writeExcel(HSSFSheet sheet){
         TableColumn[] heads = table.getColumns();

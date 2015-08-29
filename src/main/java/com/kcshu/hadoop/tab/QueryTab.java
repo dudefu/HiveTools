@@ -7,31 +7,15 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 
+import com.kcshu.hadoop.export.Excel;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.ExtendedModifyEvent;
-import org.eclipse.swt.custom.ExtendedModifyListener;
-import org.eclipse.swt.custom.ST;
-import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.custom.VerifyKeyListener;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.custom.*;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.swt.widgets.ToolBar;
-import org.eclipse.swt.widgets.ToolItem;
-import org.eclipse.swt.widgets.TreeItem;
+import org.eclipse.swt.widgets.*;
 import org.eclipse.wb.swt.SWTResourceManager;
 
 import com.kcshu.hadoop.domain.NodeType;
@@ -39,7 +23,6 @@ import com.kcshu.hadoop.editors.MyStyledText;
 import com.kcshu.hadoop.editors.MyStyledText.ActionCode;
 import com.kcshu.hadoop.editors.SQLLineStyleListener;
 import com.kcshu.hadoop.editors.UndoManager;
-import com.kcshu.hadoop.export.Excel;
 import com.kcshu.hadoop.service.ServerManager;
 import com.kcshu.hadoop.task.CallBack;
 import com.kcshu.hadoop.task.ExecuteCallBack;
@@ -74,26 +57,24 @@ public class QueryTab extends AbstractTab{
     
     private MyStyledText inputCmd;//编辑器HQL
 
-    private Table table;
+    private CTabFolder outDataTab;
 
     private String hqlFile = null;
-
     public QueryTab(CTabFolder tabFolder, TreeItem item){
         super(tabFolder,item);
     }
 
+
     @Override
     public void initSubView(Composite composite){
         composite.setLayout(new GridLayout(1, false));
-        
         initMenu(composite);
 
-        SashForm sashForm = new SashForm(composite, SWT.VERTICAL);
-        sashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
-        initEditor(sashForm);
-        initTable(sashForm);
-        sashForm.setWeights(new int[]{1,1});
-
+        SashForm borderForm = new SashForm(composite, SWT.VERTICAL);
+        borderForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+        initEditor(borderForm);
+        initOutDataTab(borderForm);
+        borderForm.setWeights(new int[]{1,1});
     }
 
     public void initMenu(Composite parent){
@@ -193,11 +174,17 @@ public class QueryTab extends AbstractTab{
     }
 
     protected void exportExcel(){
-        FileDialog dialog = new FileDialog(table.getShell(),SWT.SAVE);
+        FileDialog dialog = new FileDialog(Display.getCurrent().getActiveShell(),SWT.SAVE);
         dialog.setFilterExtensions(new String[]{"*.xls","*.*"});
         String file = dialog.open();
         if(file != null){
-            Display.getCurrent().syncExec(new Excel(table, file));   
+            CTabItem selectTabItems = outDataTab.getSelection();
+            if(selectTabItems != null){
+                Table table = (Table)selectTabItems.getControl();
+                Display.getCurrent().syncExec(new Excel(table, file));
+            }else{
+                MessageDialog.openError(tabFolder.getShell(), "导出？", "请选择您要导出的数据标签！！");
+            }
         }
     }
 
@@ -297,6 +284,9 @@ public class QueryTab extends AbstractTab{
         inputCmd.setUndoManager(undoManager);
         
         defaultSql();
+
+        //TASK 输入框最大化
+        sashForm.setMaximizedControl(inputCmd);
     }
     
     public void defaultSql(){
@@ -331,11 +321,42 @@ public class QueryTab extends AbstractTab{
         }
     }
 
-    public void initTable(SashForm sashForm){
-        table = new Table(sashForm, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
-        table.setHeaderVisible(true);
-        table.setLinesVisible(true);
-        table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
+    public void initOutDataTab(SashForm borderForm){
+        outDataTab = new CTabFolder(borderForm, SWT.NONE);
+        outDataTab.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
+        outDataTab.addMouseListener(new MouseAdapter(){
+            @Override
+            public void mouseDoubleClick(MouseEvent e){
+                if(getSashForm().getMaximizedControl() != outDataTab){
+                    getSashForm().setMaximizedControl(outDataTab);
+                }
+                else{
+                    getSashForm().setMaximizedControl(null);
+                }
+            }
+        });
+        outDataTab.addCTabFolder2Listener(new CTabFolder2Adapter(){
+            @Override
+            public void close(CTabFolderEvent event) {
+                super.close(event);
+                if(outDataTab.getItemCount() == 1){//最后关闭的那个
+                    getSashForm().setMaximizedControl(inputCmd);
+                }
+            }
+        });
+    }
+
+    /**
+     * 执行框SashForm
+     * @return
+     */
+    public SashForm getSashForm(){
+        //取消SQL输入框最大化
+        Control[] childrens = tabFolder.getChildren();
+        Composite composite = (Composite)childrens[1];
+        childrens = composite.getChildren();
+        SashForm sashForm = (SashForm)childrens[1];
+        return sashForm;
     }
 
     public void executeTask(){
@@ -345,37 +366,46 @@ public class QueryTab extends AbstractTab{
         stop.setEnabled(true);
         open.setEnabled(false);
         export.setEnabled(false);
-        
+
+        getSashForm().setMaximizedControl(null);
+
+        for(CTabItem item : outDataTab.getItems()){
+            item.dispose();
+        }
+
+        //TODO 数据多条执行
+
         String hql = inputCmd.getText().trim();
+
         CallBack<List<String[]>> back = new ExecuteCallBack(database,hql){
             @Override
             public void onData(List<String[]> param){
                 taskId = null;
                 intreputExecute();
-                showTableColumn(param);
+                showDataInTableColumn(param);
             }
-
             @Override
             public void onException(Exception e){
+                intreputExecute();
                 taskId = null;
                 String title = i18n.dialog.query.executed.title;
                 StringWriter writer = new StringWriter();
                 e.printStackTrace(new PrintWriter(writer));
                 MessageDialog.openError(tabFolder.getShell(), title, writer.toString());
-                intreputExecute();
             }
         };
         taskId = ServerManager.get(getServerId()).execute(back);
     }
 
-    public void showTableColumn(List<String[]> objs){
-        table.removeAll();
-        table.clearAll();
-        
-        for( TableColumn tc : table.getColumns() ){
-            tc.dispose();
-        }
-        
+    public void showDataInTableColumn(List<String[]> objs){
+        CTabItem tabItem = new CTabItem(outDataTab, SWT.BORDER);
+        tabItem.setShowClose(true);
+        tabItem.setText("Out "+outDataTab.getItemCount());
+
+        Table table = new Table(outDataTab, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
+        table.setHeaderVisible(true);
+        table.setLinesVisible(true);
+
         if(objs.size() != 0){
             export.setEnabled(true);
             String[] head = objs.get(0);
@@ -413,6 +443,8 @@ public class QueryTab extends AbstractTab{
             }
             Sorter.addSorter(table);
         }
+        tabItem.setControl(table);
+        outDataTab.setSelection(tabItem);
     }
 
     /**

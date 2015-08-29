@@ -117,7 +117,7 @@ public class i18n {
 			public static String issue = "报告问题";
 			public static String star  = "捐助";
 			
-			public static String versionNo = "0.0.1";
+			public static String versionNo = "0.1.3";
 			public static String email = "zhouhaichao(a)2008.sina.com";
 			public static String issueClick = "<a href=\"https://github.com/tinycalf/hivetools/issues?state=open\">"+issue+"</a>";
 			public static String headTitle = "<a href=\"https://github.com/tinycalf/hivetools\">HiveServer2 Client(hivetools)</a>";

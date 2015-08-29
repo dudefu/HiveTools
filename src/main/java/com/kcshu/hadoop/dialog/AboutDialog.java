@@ -22,7 +22,7 @@ public class AboutDialog extends AbstractDialog {
 	/**
 	 * Create the dialog.
 	 * @param parent
-	 * @param style
+	 * @param image
 	 */
 	public AboutDialog(Shell parent, Image image) {
 		super(parent, image);
