@@ -1,6 +1,6 @@
 package com.kcshu.hadoop.tab;
 
-import java.util.UUID;
+import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -26,8 +26,8 @@ public abstract class AbstractTab extends CTabItem implements Tab{
     protected UUID id;//tabId主要用户标示
     protected String serverId;//serverId主要用户获取server信息
     protected String database = "";//当前处于哪个database下面,
-    protected UUID taskId = null;//正在运行的任务ID
-    
+    protected List<UUID> taskIds = new ArrayList<>();
+
     protected TreeItem treeItem;
     protected CTabFolder tabFolder;
     protected CTabItem self;
@@ -101,10 +101,10 @@ public abstract class AbstractTab extends CTabItem implements Tab{
      * 停止执行
      */
     public void intreputTask(){
-        if(taskId != null){//停止任务
+        for (UUID taskId : taskIds){
             ServerManager.get(serverId).killTask(taskId);
         }
-        taskId = null;
+        taskIds.clear();
     }
 
     public void afterInitView(){
@@ -120,7 +120,7 @@ public abstract class AbstractTab extends CTabItem implements Tab{
     
     @Override
     public boolean canClose(){
-        return taskId == null;
+        return taskIds.size()==0;
     }
 
     public UUID getId(){
