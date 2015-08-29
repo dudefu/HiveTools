@@ -6,7 +6,10 @@ import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
@@ -52,6 +55,40 @@ public class ShowFunctionsTab extends AbstractTab{
         TableColumn funExample = new TableColumn(table, SWT.NONE);
         funExample .setText(i18n.tab.funtab.example);
         tclayout.setColumnData(funExample, new ColumnWeightData(2, 200, false));
+        
+        
+        Listener paintListener = new Listener() {
+            public void handleEvent(Event event) {
+                switch(event.type) {        
+                    case SWT.MeasureItem: {
+                        TableItem item = (TableItem)event.item;
+                        String text = getText(item, event.index);
+                        Point size = event.gc.textExtent(text);
+                        event.width = size.x;
+                        event.height = Math.max(event.height, size.y);
+                        break;
+                    }
+                    case SWT.PaintItem: {
+                        TableItem item = (TableItem)event.item;
+                        String text = getText(item, event.index);
+                        Point size = event.gc.textExtent(text);                    
+                        int offset2 = event.index == 0 ? Math.max(0, (event.height - size.y) / 2) : 0;
+                        event.gc.drawText(text, event.x, event.y + offset2, true);
+                        break;
+                    }
+                    case SWT.EraseItem: {    
+                        event.detail &= ~SWT.FOREGROUND;
+                        break;
+                    }
+                }
+            }
+            String getText(TableItem item, int column) {
+                return item.getText(column);
+            }
+        };
+       table.addListener(SWT.MeasureItem, paintListener);
+       table.addListener(SWT.PaintItem, paintListener);
+       table.addListener(SWT.EraseItem, paintListener);
     }
 
     @Override

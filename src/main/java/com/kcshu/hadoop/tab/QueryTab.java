@@ -92,7 +92,7 @@ public class QueryTab extends AbstractTab{
         sashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
         initEditor(sashForm);
         initTable(sashForm);
-        sashForm.setWeights(new int[]{1, 2});
+        sashForm.setWeights(new int[]{1,1});
 
     }
 

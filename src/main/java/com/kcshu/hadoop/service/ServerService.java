@@ -46,8 +46,6 @@ public class ServerService{
     
     /**
      * 执行某些任务
-     * 
-     * @param id
      * @param back
      */
     public <V> UUID execute(final CallBack<V> back){

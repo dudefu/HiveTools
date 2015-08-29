@@ -174,26 +174,31 @@ public class HiveServer{
 
     public List<String[]> loadGrid(String db,String hql) throws Exception{
         hql = hql.replace("\\s+", " ");
-        List<String[]> grids = new ArrayList<String[]>();
         Connection con =  openConnect(db);
         Statement stat = null;
         ResultSet rs = null;
         try{
+            List<String[]> grids = new ArrayList<String[]>();
             stat = con.createStatement();
-            rs = stat.executeQuery(hql);
-            ResultSetMetaData rsmd = rs.getMetaData();
-            int cc = rsmd.getColumnCount();
-            String[] header = new String[cc];
-            for(int i = 0; i < cc; i++){
-                header[i] = rsmd.getColumnName(i + 1);
-            }
-            grids.add(header);
-            while(rs.next()){
-                String[] columns = new String[cc];
+            if(stat.execute(hql)){
+                rs = stat.getResultSet();
+                ResultSetMetaData rsmd = rs.getMetaData();
+                int cc = rsmd.getColumnCount();
+                String[] header = new String[cc];
                 for(int i = 0; i < cc; i++){
-                    columns[i] = rs.getString(i + 1);
+                    header[i] = rsmd.getColumnName(i + 1);
                 }
-                grids.add(columns);
+                grids.add(header);
+                while(rs.next()){
+                    String[] columns = new String[cc];
+                    for(int i = 0; i < cc; i++){
+                        columns[i] = rs.getString(i + 1);
+                    }
+                    grids.add(columns);
+                }
+            }else{
+                grids.add(new String[]{"rows updated"});
+                grids.add(new String[]{String.valueOf(stat.getUpdateCount())});
             }
             return grids;
         }finally{
