@@ -7,9 +7,12 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.kcshu.hadoop.export.Excel;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.time.DateUtils;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.*;
@@ -358,8 +361,7 @@ public class QueryTab extends AbstractTab{
      */
     public SashForm getSashForm(){
         //取消SQL输入框最大化
-        CTabItem  tabItem = tabFolder.getSelection();
-        Control[] childrens = ((Composite)tabItem.getControl()).getChildren();
+        Control[] childrens = ((Composite)this.getControl()).getChildren();
         SashForm sashForm = (SashForm)childrens[1];
         return sashForm;
     }
@@ -378,14 +380,15 @@ public class QueryTab extends AbstractTab{
 
         String hql = inputCmd.getText().trim();
         Map<String,String> map = new HashMap<>();
-        String[] params = hql.split("\r\n");
-        for (String param : params){
-            if(param.startsWith("-- set")){
-                String[] vv = param.replace("-- set","").trim().split("=",2);
-                map.put(vv[0],vv[1]);
-            }else if(param.startsWith("--set")){
-                String[] vv = param.replace("-- set","").trim().split("=",2);
-                map.put(vv[0],vv[1]);
+        String[] lines = hql.split("(\r\n|\n)");
+        Pattern pattern = Pattern.compile("--[\\s]*(set|SET)[\\s]*([a-zA-Z0-9_]*)[\\s]*=[\\s]*(.*)");
+        for (String line : lines){
+            Matcher m = pattern.matcher(line);
+            if(m.matches()){
+                String key = m.group(2);
+                String value = m.group(3);
+                map.put(key,value);
+                hql = hql.replace(line,"");
             }
         }
 
@@ -394,10 +397,17 @@ public class QueryTab extends AbstractTab{
                 sql = sql.trim();
                 for (String param : map.keySet()){
                     sql = sql.replace("${hiveconf:"+param+"}",map.get(param));
+                    sql = sql.replace("${"+param+"}",map.get(param));
                 }
                 runningHsql.add(sql);
             }
         }
+       /*if(!map.isEmpty()){
+            inputCmd.append("\r\n\r\n\r\n");
+            for(Map.Entry<String,String> entry : map.entrySet()){
+                inputCmd.append("--"+entry.getKey()+"="+entry.getValue()+"\r\n");
+            }
+        }*/
         runHql();
     }
     protected void runHql(){
@@ -405,6 +415,7 @@ public class QueryTab extends AbstractTab{
             intreputExecute();
         }else{
             String sql = runningHsql.remove(0);
+            System.out.println(sql);
             CallBack<List<String[]>> back = new ExecuteCallBack(database,sql){
                 @Override
                 public void onData(List<String[]> param){
