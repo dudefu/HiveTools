@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.*;
 import java.util.List;
 
 import com.kcshu.hadoop.export.Excel;
@@ -61,7 +60,6 @@ public class QueryTab extends AbstractTab{
     private CTabFolder outDataTab;
 
     private String hqlFile = null;
-    private List<String> runningHsql = new ArrayList<>();
     public QueryTab(CTabFolder tabFolder, TreeItem item){
         super(tabFolder,item);
     }
@@ -90,7 +88,7 @@ public class QueryTab extends AbstractTab{
         executeAction = new SelectionAdapter(){
             @Override
             public void widgetSelected(SelectionEvent e){
-                if( QueryTab.this.canClose() ){
+                if( taskId == null){
                     executeTask();
                 }
                 else{
@@ -111,8 +109,7 @@ public class QueryTab extends AbstractTab{
         };
         stop.addSelectionListener(stopAction);
 
-        new ToolItem(tb, SWT.SEPARATOR | SWT.BORDER);
-
+        
         save = new ToolItem(tb, SWT.PUSH);
         save.setText(i18n.menu.console.save);
         save.setImage(images.console.save);
@@ -125,6 +122,7 @@ public class QueryTab extends AbstractTab{
         };
         save.addSelectionListener(saveAction);
 
+        
         open = new ToolItem(tb, SWT.PUSH);
         open.setText(i18n.menu.console.open);
         open.setImage(images.console.open);
@@ -147,10 +145,8 @@ public class QueryTab extends AbstractTab{
             }
         };
         export.addSelectionListener(exportAction);
-
-/*
-        new ToolItem(tb, SWT.SEPARATOR | SWT.BORDER);
-
+        
+        
         previous = new ToolItem(tb, SWT.PUSH);
         previous.setText(i18n.menu.console.previous);
         previous.setImage(images.console.previous);
@@ -158,12 +154,12 @@ public class QueryTab extends AbstractTab{
         previousAction = new SelectionAdapter(){
             @Override
             public void widgetSelected(SelectionEvent e){
-
+               
             }
         };
         previous.addSelectionListener(previousAction);
-
-
+        
+        
         next = new ToolItem(tb, SWT.PUSH);
         next.setText(i18n.menu.console.next);
         next.setImage(images.console.next);
@@ -171,12 +167,10 @@ public class QueryTab extends AbstractTab{
         nextAction = new SelectionAdapter(){
             @Override
             public void widgetSelected(SelectionEvent e){
-
+               
             }
         };
         next.addSelectionListener(nextAction);
-*/
-
     }
 
     protected void exportExcel(){
@@ -253,7 +247,7 @@ public class QueryTab extends AbstractTab{
         });
         inputCmd.addVerifyKeyListener(new VerifyKeyListener(){
             public void verifyKey(VerifyEvent event){
-                if(!canClose()){
+                if(taskId != null){
                     event.doit = false;
                 }
             }
@@ -358,8 +352,9 @@ public class QueryTab extends AbstractTab{
      */
     public SashForm getSashForm(){
         //取消SQL输入框最大化
-        CTabItem  tabItem = tabFolder.getSelection();
-        Control[] childrens = ((Composite)tabItem.getControl()).getChildren();
+        Control[] childrens = tabFolder.getChildren();
+        Composite composite = (Composite)childrens[1];
+        childrens = composite.getChildren();
         SashForm sashForm = (SashForm)childrens[1];
         return sashForm;
     }
@@ -372,63 +367,37 @@ public class QueryTab extends AbstractTab{
         open.setEnabled(false);
         export.setEnabled(false);
 
+        getSashForm().setMaximizedControl(null);
+
         for(CTabItem item : outDataTab.getItems()){
             item.dispose();
         }
 
-        String hql = inputCmd.getText().trim();
-        Map<String,String> map = new HashMap<>();
-        String[] params = hql.split("\r\n");
-        for (String param : params){
-            if(param.startsWith("-- set")){
-                String[] vv = param.replace("-- set","").trim().split("=",2);
-                map.put(vv[0],vv[1]);
-            }else if(param.startsWith("--set")){
-                String[] vv = param.replace("--set","").trim().split("=",2);
-                map.put(vv[0],vv[1]);
-            }
-        }
+        //TODO 数据多条执行
 
-        for (String sql : hql.split(";")){
-            if(!sql.trim().equals("")){
-                sql = sql.trim();
-                for (String param : map.keySet()){
-                    sql = sql.replace("${hiveconf:"+param+"}",map.get(param));
-                }
-                runningHsql.add(sql);
+        String hql = inputCmd.getText().trim();
+
+        CallBack<List<String[]>> back = new ExecuteCallBack(database,hql){
+            @Override
+            public void onData(List<String[]> param){
+                taskId = null;
+                intreputExecute();
+                showDataInTableColumn(param);
             }
-        }
-        runHql();
-    }
-    protected void runHql(){
-        if(runningHsql.size()==0){
-            intreputExecute();
-        }else{
-            String sql = runningHsql.remove(0);
-            CallBack<List<String[]>> back = new ExecuteCallBack(database,sql){
-                @Override
-                public void onData(List<String[]> param){
-                    showDataInTableColumn(param);
-                    taskIds.remove(0);
-                    runHql();
-                }
-                @Override
-                public void onException(Exception e){
-                    taskIds.remove(0);
-                    runHql();
-                    String title = i18n.dialog.query.executed.title;
-                    StringWriter writer = new StringWriter();
-                    e.printStackTrace(new PrintWriter(writer));
-                    MessageDialog.openError(tabFolder.getShell(), title, writer.toString());
-                }
-            };
-            taskIds.add(ServerManager.get(getServerId()).execute(back));
-        }
+            @Override
+            public void onException(Exception e){
+                intreputExecute();
+                taskId = null;
+                String title = i18n.dialog.query.executed.title;
+                StringWriter writer = new StringWriter();
+                e.printStackTrace(new PrintWriter(writer));
+                MessageDialog.openError(tabFolder.getShell(), title, writer.toString());
+            }
+        };
+        taskId = ServerManager.get(getServerId()).execute(back);
     }
 
     public void showDataInTableColumn(List<String[]> objs){
-        getSashForm().setMaximizedControl(null);
-
         CTabItem tabItem = new CTabItem(outDataTab, SWT.BORDER);
         tabItem.setShowClose(true);
         tabItem.setText("Out "+outDataTab.getItemCount());
@@ -489,7 +458,7 @@ public class QueryTab extends AbstractTab{
 
         stop.setEnabled(false);
         open.setEnabled(true);
-        export.setEnabled(tabFolder.getItemCount()>0);
+        export.setEnabled(false);
     }
     
     @Override
