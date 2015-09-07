@@ -5,10 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
 import com.kcshu.hadoop.export.Excel;
 import org.apache.commons.io.IOUtils;
@@ -113,7 +111,8 @@ public class QueryTab extends AbstractTab{
         };
         stop.addSelectionListener(stopAction);
 
-        
+        new ToolItem(tb, SWT.SEPARATOR | SWT.BORDER);
+
         save = new ToolItem(tb, SWT.PUSH);
         save.setText(i18n.menu.console.save);
         save.setImage(images.console.save);
@@ -126,7 +125,6 @@ public class QueryTab extends AbstractTab{
         };
         save.addSelectionListener(saveAction);
 
-        
         open = new ToolItem(tb, SWT.PUSH);
         open.setText(i18n.menu.console.open);
         open.setImage(images.console.open);
@@ -149,8 +147,10 @@ public class QueryTab extends AbstractTab{
             }
         };
         export.addSelectionListener(exportAction);
-        
-        
+
+/*
+        new ToolItem(tb, SWT.SEPARATOR | SWT.BORDER);
+
         previous = new ToolItem(tb, SWT.PUSH);
         previous.setText(i18n.menu.console.previous);
         previous.setImage(images.console.previous);
@@ -158,12 +158,12 @@ public class QueryTab extends AbstractTab{
         previousAction = new SelectionAdapter(){
             @Override
             public void widgetSelected(SelectionEvent e){
-               
+
             }
         };
         previous.addSelectionListener(previousAction);
-        
-        
+
+
         next = new ToolItem(tb, SWT.PUSH);
         next.setText(i18n.menu.console.next);
         next.setImage(images.console.next);
@@ -171,10 +171,12 @@ public class QueryTab extends AbstractTab{
         nextAction = new SelectionAdapter(){
             @Override
             public void widgetSelected(SelectionEvent e){
-               
+
             }
         };
         next.addSelectionListener(nextAction);
+*/
+
     }
 
     protected void exportExcel(){
@@ -375,8 +377,24 @@ public class QueryTab extends AbstractTab{
         }
 
         String hql = inputCmd.getText().trim();
+        Map<String,String> map = new HashMap<>();
+        String[] params = hql.split("\r\n");
+        for (String param : params){
+            if(param.startsWith("-- set")){
+                String[] vv = param.replace("-- set","").trim().split("=",2);
+                map.put(vv[0],vv[1]);
+            }else if(param.startsWith("--set")){
+                String[] vv = param.replace("--set","").trim().split("=",2);
+                map.put(vv[0],vv[1]);
+            }
+        }
+
         for (String sql : hql.split(";")){
             if(!sql.trim().equals("")){
+                sql = sql.trim();
+                for (String param : map.keySet()){
+                    sql = sql.replace("${hiveconf:"+param+"}",map.get(param));
+                }
                 runningHsql.add(sql);
             }
         }
