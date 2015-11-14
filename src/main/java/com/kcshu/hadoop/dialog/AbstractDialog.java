@@ -19,7 +19,7 @@ public abstract class AbstractDialog extends Dialog {
 	 * Create the dialog.
 	 * 
 	 * @param parent
-	 * @param style
+	 * @param image
 	 */
 	public AbstractDialog(Shell parent, Image image) {
 		super(parent, SWT.SHELL_TRIM | SWT.APPLICATION_MODAL);

@@ -141,7 +141,7 @@ public class TableAttrTab extends AbstractTab{
             public void onException(Exception e){
                 taskIds.clear();
                 ExceptionUtil.show(tabFolder.getShell(),e);
-                intreputTask();
+                interruptedTask();
             }
         };
         taskIds.add(ServerManager.get(getServerId()).execute(back));
@@ -173,7 +173,7 @@ public class TableAttrTab extends AbstractTab{
             public void onException(Exception e){
                 partitonsTable.setData("OPEN",false);
                 ExceptionUtil.show(tabFolder.getShell(),e);
-                intreputTask();
+                interruptedTask();
             }
         };
         ServerManager.get(getServerId()).execute(back);

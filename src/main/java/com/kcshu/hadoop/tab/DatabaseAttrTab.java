@@ -75,7 +75,7 @@ public class DatabaseAttrTab extends AbstractTab{
             public void onException(Exception e){
                 taskIds.clear();
                 ExceptionUtil.show(tabFolder.getShell(),e);
-                intreputTask();
+                interruptedTask();
             }
         };
         taskIds.add(ServerManager.get(getServerId()).execute(back));

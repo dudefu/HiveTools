@@ -46,7 +46,8 @@ public class images{
         public static final Image save = get("save");
         
         public static final Image export = get("table_export");
-        
+
+        public static final Image format = get("format");//格式化
 
         public static final Image previous = get("go_previous");
         public static final Image next = get("go_next");

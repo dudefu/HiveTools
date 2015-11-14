@@ -27,10 +27,17 @@ import com.kcshu.hadoop.utils.i18n;
 public class Excel extends Thread{
     protected Table table;
     protected String filePath;
-
-    public Excel(Table table, String filePath){
+    protected boolean isSelected = false;
+    /**
+     * 导出table数据到Excel
+     * @param table
+     * @param filePath
+     * @param isSelected
+     */
+    public Excel(Table table, String filePath, boolean isSelected){
         this.table = table;
         this.filePath = filePath;
+        this.isSelected = isSelected;
     }
 
     @Override
@@ -75,7 +82,7 @@ public class Excel extends Thread{
             cell.setCellValue(text);
         }
         
-        TableItem[] rows = table.getItems();
+        TableItem[] rows = isSelected ? table.getSelection() : table.getItems();
         for(int i = 0; i < rows.length; i++){
             HSSFRow row = sheet.createRow(i + 1);
             for(int j = 0; j < heads.length; j++){

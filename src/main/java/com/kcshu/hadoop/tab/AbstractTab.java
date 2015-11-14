@@ -82,7 +82,7 @@ public abstract class AbstractTab extends CTabItem implements Tab{
         self.addDisposeListener(new DisposeListener(){
             @Override
             public void widgetDisposed(DisposeEvent e){
-                intreputTask();
+                interruptedTask();
             }
         });
 
@@ -100,7 +100,7 @@ public abstract class AbstractTab extends CTabItem implements Tab{
     /**
      * 停止执行
      */
-    public void intreputTask(){
+    public void interruptedTask(){
         for (UUID taskId : taskIds){
             ServerManager.get(serverId).killTask(taskId);
         }
@@ -113,7 +113,7 @@ public abstract class AbstractTab extends CTabItem implements Tab{
     
     @Override
     public boolean close(){
-        intreputTask();
+        interruptedTask();
         dispose();
         return true;
     }

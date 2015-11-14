@@ -65,6 +65,10 @@ public class i18n {
             
             public static String refresh = "刷新";
         }
+		public static class outdata{
+			public static String save = "保存所选";
+			public static String copy = "复制所选";
+		}
 	}
 
 	public static class menu {
@@ -104,6 +108,7 @@ public class i18n {
             public static String open = "打开(F10)";
             
             public static String export = "导出";
+			public static String format = "格式化";
             public static String previous = "上一页";
             public static String next = "下一页";
         }

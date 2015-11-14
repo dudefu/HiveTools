@@ -1,37 +1,39 @@
 package com.kcshu.hadoop.tab;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.*;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import com.kcshu.hadoop.export.Excel;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.time.DateUtils;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.*;
-import org.eclipse.swt.events.*;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.*;
-import org.eclipse.wb.swt.SWTResourceManager;
-
 import com.kcshu.hadoop.domain.NodeType;
 import com.kcshu.hadoop.editors.MyStyledText;
 import com.kcshu.hadoop.editors.MyStyledText.ActionCode;
 import com.kcshu.hadoop.editors.SQLLineStyleListener;
 import com.kcshu.hadoop.editors.UndoManager;
+import com.kcshu.hadoop.export.Excel;
 import com.kcshu.hadoop.service.ServerManager;
 import com.kcshu.hadoop.task.CallBack;
 import com.kcshu.hadoop.task.ExecuteCallBack;
 import com.kcshu.hadoop.utils.i18n;
 import com.kcshu.hadoop.utils.images;
+import org.apache.commons.io.IOUtils;
+import org.apache.poi.hssf.usermodel.HSSFRichTextString;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.*;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.*;
+import org.eclipse.wb.swt.SWTResourceManager;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 查询Tab
@@ -54,6 +56,9 @@ public class QueryTab extends AbstractTab{
     
     private ToolItem export;//导出
     private SelectionAdapter exportAction;
+
+    private ToolItem format;//格式化SQL
+    private SelectionAdapter formatAction;
     
     //上一页,下一页
     private ToolItem previous,next;
@@ -65,6 +70,10 @@ public class QueryTab extends AbstractTab{
 
     private String hqlFile = null;
     private List<String> runningHsql = new ArrayList<>();
+
+    private Menu tableRightMenu;
+    private Menu editRightMenu;
+
     public QueryTab(CTabFolder tabFolder, TreeItem item){
         super(tabFolder,item);
     }
@@ -74,12 +83,48 @@ public class QueryTab extends AbstractTab{
     public void initSubView(Composite composite){
         composite.setLayout(new GridLayout(1, false));
         initMenu(composite);
+        initRightPopMenu();
 
         SashForm borderForm = new SashForm(composite, SWT.VERTICAL);
         borderForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
         initEditor(borderForm);
         initOutDataTab(borderForm);
         borderForm.setWeights(new int[]{1,1});
+    }
+
+    private void initRightPopMenu() {
+        tableRightMenu = new Menu(self.getParent());
+
+        createItem(tableRightMenu,
+                i18n.pop.outdata.copy, null,
+                new SelectionAdapter(){
+                    @Override
+                    public void widgetSelected(SelectionEvent arg0){
+                        copyTableSelect();
+                    }
+                });
+
+        createItem(tableRightMenu,
+                i18n.pop.outdata.save, null,
+                new SelectionAdapter(){
+                    @Override
+                    public void widgetSelected(SelectionEvent arg0){
+                        exportExcel(true);
+                    }
+                });
+    }
+
+
+    protected MenuItem createItem(Menu menu, String label, Image icon, SelectionListener selectionListener){
+        MenuItem menuitem = new MenuItem(menu, SWT.CASCADE);
+        menuitem.setText(label);
+        if(icon != images.nil){
+            menuitem.setImage(icon);
+        }
+        if(selectionListener != null){
+            menuitem.addSelectionListener(selectionListener);
+        }
+        return menuitem;
     }
 
     public void initMenu(Composite parent){
@@ -109,7 +154,7 @@ public class QueryTab extends AbstractTab{
         stop.setEnabled(false);
         stopAction = new SelectionAdapter(){
             public void widgetSelected(SelectionEvent e){
-                intreputExecute();
+                interruptedExecute();
             }
         };
         stop.addSelectionListener(stopAction);
@@ -146,10 +191,23 @@ public class QueryTab extends AbstractTab{
         exportAction = new SelectionAdapter(){
             @Override
             public void widgetSelected(SelectionEvent e){
-                exportExcel();
+                exportExcel(false);
             }
         };
         export.addSelectionListener(exportAction);
+
+        new ToolItem(tb, SWT.SEPARATOR | SWT.BORDER);
+
+       /* format = new ToolItem(tb, SWT.PUSH);
+        format.setText(i18n.menu.console.format);
+        format.setImage(images.console.format);
+        format.setEnabled(false);
+        formatAction = new SelectionAdapter(){
+            @Override
+            public void widgetSelected(SelectionEvent e){
+            }
+        };
+        format.addSelectionListener(formatAction);*/
 
 /*
         new ToolItem(tb, SWT.SEPARATOR | SWT.BORDER);
@@ -179,10 +237,9 @@ public class QueryTab extends AbstractTab{
         };
         next.addSelectionListener(nextAction);
 */
-
     }
 
-    protected void exportExcel(){
+    protected void exportExcel(boolean isSelected){
         FileDialog dialog = new FileDialog(Display.getCurrent().getActiveShell(),SWT.SAVE);
         dialog.setFilterExtensions(new String[]{"*.xls","*.*"});
         String file = dialog.open();
@@ -190,7 +247,7 @@ public class QueryTab extends AbstractTab{
             CTabItem selectTabItems = outDataTab.getSelection();
             if(selectTabItems != null){
                 Table table = (Table)selectTabItems.getControl();
-                Display.getCurrent().syncExec(new Excel(table, file));
+                Display.getCurrent().syncExec(new Excel(table, file, isSelected));
             }else{
                 MessageDialog.openError(tabFolder.getShell(), "导出？", "请选择您要导出的数据标签！！");
             }
@@ -374,12 +431,14 @@ public class QueryTab extends AbstractTab{
         open.setEnabled(false);
         export.setEnabled(false);
 
+        //销毁之前所有的子tab
         for(CTabItem item : outDataTab.getItems()){
             item.dispose();
         }
 
-        String hql = inputCmd.getText().trim();
         Map<String,String> map = new HashMap<>();
+
+        String hql = inputCmd.getText().trim();
         String[] lines = hql.split("(\r\n|\n)");
         Pattern pattern = Pattern.compile("--[\\s]*(set|SET)[\\s]*([a-zA-Z0-9_]*)[\\s]*=[\\s]*(.*)");
         for (String line : lines){
@@ -408,14 +467,15 @@ public class QueryTab extends AbstractTab{
                 inputCmd.append("--"+entry.getKey()+"="+entry.getValue()+"\r\n");
             }
         }*/
+
         runHql();
     }
     protected void runHql(){
         if(runningHsql.size()==0){
-            intreputExecute();
+            interruptedExecute();
         }else{
             String sql = runningHsql.remove(0);
-            System.out.println(sql);
+
             CallBack<List<String[]>> back = new ExecuteCallBack(database,sql){
                 @Override
                 public void onData(List<String[]> param){
@@ -442,11 +502,30 @@ public class QueryTab extends AbstractTab{
 
         CTabItem tabItem = new CTabItem(outDataTab, SWT.BORDER);
         tabItem.setShowClose(true);
-        tabItem.setText("Out "+outDataTab.getItemCount());
+        tabItem.setText("Result "+outDataTab.getItemCount());
 
-        Table table = new Table(outDataTab, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
+        final Table table = new Table(outDataTab, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
         table.setHeaderVisible(true);
         table.setLinesVisible(true);
+        table.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+            switch(e.keyCode | e.stateMask){
+                case 's' | SWT.CTRL :{ //保存
+                    exportExcel(true);
+                }break;
+                case 'c' | SWT.CTRL :{
+                    copyTableSelect();
+                }break;
+            }
+            }
+        });
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseDown(MouseEvent e) {
+                table.setMenu(tableRightMenu);
+            }
+        });
 
         if(objs.size() != 0){
             export.setEnabled(true);
@@ -489,12 +568,38 @@ public class QueryTab extends AbstractTab{
         outDataTab.setSelection(tabItem);
     }
 
+
+    /**
+     * 复制所选
+     */
+    public void copyTableSelect(){
+        CTabItem selectTabItems = outDataTab.getSelection();
+        if(selectTabItems != null){
+            Table table = (Table)selectTabItems.getControl();
+            TableItem[] rows = table.getSelection();
+            StringBuffer clipText = new StringBuffer();
+            for(TableItem row : rows){
+                for(int j = 0; j < table.getColumnCount(); j++){
+                    clipText.append(row.getText(j));
+                    if(j != table.getColumnCount()-1){
+                        clipText.append("\t");
+                    }
+                }
+                clipText.append("\n");
+            }
+
+            Clipboard clipboard = new Clipboard(self.getDisplay());
+            clipboard.setContents(new Object[] { clipText.toString() }, new Transfer[]{ TextTransfer.getInstance() });
+            clipboard.dispose();
+        }
+    }
+
     /**
      * 停止执行
      */
-    public void intreputExecute(){
-        super.intreputTask();
-        
+    public void interruptedExecute(){
+        super.interruptedTask();
+
         execute.setImage(images.console.toRun);
         execute.setText(i18n.menu.console.toRun);
 

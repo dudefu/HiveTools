@@ -88,7 +88,7 @@ public class HiveTools{
         shell.open();
         shell.layout();
 
-        reflushServiceTree();
+        flushServiceTree();
 
         while(!shell.isDisposed()){
             try{
@@ -115,7 +115,7 @@ public class HiveTools{
     /**
      * 初始化所有服务
      */
-    private void reflushServiceTree(){
+    private void flushServiceTree(){
         List<Server> services = Config.services();
         if(services.size() == 0){
             addServer();
@@ -181,7 +181,7 @@ public class HiveTools{
                 new SelectionAdapter(){
                     @Override
                     public void widgetSelected(SelectionEvent arg0){
-                        reflushServiceTree();
+                        flushServiceTree();
                     }
                 });
     }
@@ -487,7 +487,11 @@ public class HiveTools{
         mntmAbout.setText(i18n.menu.help.about);
     }
 
-    protected void initMenuServer(Menu menu){
+    /**
+     * 初始化服务菜单
+     * @param menu
+     */
+    protected void initMenuServer(final Menu menu){
         // server
         menuServer = new Menu(menu);
         menuServer.addMenuListener(new MenuListener(){
@@ -502,12 +506,12 @@ public class HiveTools{
                         if(Boolean.TRUE.equals(selectedItems[0].getData(NodeType.NODE_ITEM_OPENED))){
                             menuServer.getItem(1).setEnabled(false);// 修改
                             menuServer.getItem(2).setEnabled(false);// 删除
-                            menuServer.getItem(3).setEnabled(false);// 删除
+                            menuServer.getItem(3).setEnabled(false);// 属性
                         }
                         else{
                             menuServer.getItem(1).setEnabled(true);// 修改
                             menuServer.getItem(2).setEnabled(true);// 删除
-                            menuServer.getItem(3).setEnabled(true);// 删除
+                            menuServer.getItem(3).setEnabled(true);// 属性
                         }
                     }
                     else{
@@ -535,49 +539,49 @@ public class HiveTools{
                     }
                 });
 
-        MenuItem mntmEdit = new MenuItem(menuServer, SWT.NONE);
-        mntmEdit.setText(i18n.menu.server.modify);
-        mntmEdit.setImage(images.menu.server.modify);
-        mntmEdit.setEnabled(false);
-        mntmEdit.addSelectionListener(new SelectionAdapter(){
+        MenuItem menuEdit = new MenuItem(menuServer, SWT.NONE);
+        menuEdit.setText(i18n.menu.server.modify);
+        menuEdit.setImage(images.menu.server.modify);
+        menuEdit.setEnabled(false);
+        menuEdit.addSelectionListener(new SelectionAdapter() {
             @Override
-            public void widgetSelected(SelectionEvent e){
+            public void widgetSelected(SelectionEvent e) {
                 modifyServer();
             }
         });
 
-        MenuItem mntmDelete = new MenuItem(menuServer, SWT.NONE);
-        mntmDelete.setText(i18n.menu.server.del);
-        mntmDelete.setImage(images.menu.server.del);
-        mntmDelete.setEnabled(false);
-        mntmDelete.addSelectionListener(new SelectionAdapter(){
+        MenuItem menuDelete = new MenuItem(menuServer, SWT.NONE);
+        menuDelete.setText(i18n.menu.server.del);
+        menuDelete.setImage(images.menu.server.del);
+        menuDelete.setEnabled(false);
+        menuDelete.addSelectionListener(new SelectionAdapter() {
             @Override
-            public void widgetSelected(SelectionEvent arg0){
+            public void widgetSelected(SelectionEvent arg0) {
                 removeServer();
             }
         });
 
-        MenuItem mntmProperties = new MenuItem(menuServer, SWT.NONE);
-        mntmProperties.setText(i18n.menu.server.attr);
-        mntmProperties.setEnabled(false);
-        mntmProperties.addSelectionListener(new SelectionAdapter(){
+        MenuItem menuProperties = new MenuItem(menuServer, SWT.NONE);
+        menuProperties.setText(i18n.menu.server.attr);
+        menuProperties.setEnabled(false);
+        menuProperties.addSelectionListener(new SelectionAdapter() {
             @Override
-            public void widgetSelected(SelectionEvent e){
+            public void widgetSelected(SelectionEvent e) {
                 //serverProperties();
             }
         });
 
         new MenuItem(menuServer, SWT.SEPARATOR);
 
-        MenuItem mntmExit = new MenuItem(menuServer, SWT.NONE);
-        mntmExit.setImage(images.menu.server.exit);
-        mntmExit.addSelectionListener(new SelectionAdapter(){
+        MenuItem menuExit = new MenuItem(menuServer, SWT.NONE);
+        menuExit.setImage(images.menu.server.exit);
+        menuExit.addSelectionListener(new SelectionAdapter() {
             @Override
-            public void widgetSelected(SelectionEvent arg0){
+            public void widgetSelected(SelectionEvent arg0) {
                 shell.close();
             }
         });
-        mntmExit.setText(i18n.menu.server.exit);
+        menuExit.setText(i18n.menu.server.exit);
     }
 
     protected void initMenuTools(Menu menu){
@@ -587,18 +591,18 @@ public class HiveTools{
         toolsMenuItem.setText(i18n.menu.tools.txt);
         toolsMenuItem.setMenu(menuTools);
 
-        Menu mentToolsExport = new Menu(menuTools);
-        MenuItem mntmExport = new MenuItem(menuTools, SWT.CASCADE);
-        mntmExport.setText(i18n.menu.tools.export.title);
-        mntmExport.setMenu(mentToolsExport);
+        Menu menuToolsExport = new Menu(menuTools);
+        MenuItem menuExport = new MenuItem(menuTools, SWT.CASCADE);
+        menuExport.setText(i18n.menu.tools.export.title);
+        menuExport.setMenu(menuToolsExport);
 
-        MenuItem mntmExportExcel = new MenuItem(mentToolsExport, SWT.CASCADE);
-        mntmExportExcel.setEnabled(false);
-        mntmExportExcel.setText(i18n.menu.tools.export.excel);
+        MenuItem menuExportExcel = new MenuItem(menuToolsExport, SWT.CASCADE);
+        menuExportExcel.setEnabled(false);
+        menuExportExcel.setText(i18n.menu.tools.export.excel);
 
-        MenuItem mntmExportTxt = new MenuItem(mentToolsExport, SWT.CASCADE);
-        mntmExportTxt.setEnabled(false);
-        mntmExportTxt.setText(i18n.menu.tools.export.txt);
+        MenuItem menuExportTxt = new MenuItem(menuToolsExport, SWT.CASCADE);
+        menuExportTxt.setEnabled(false);
+        menuExportTxt.setText(i18n.menu.tools.export.txt);
     }
 
     private void initSash(){
@@ -707,7 +711,7 @@ public class HiveTools{
             Config.delServer(serverId);
             sel.dispose();
             //BUG 0001 ,删除后不能刷新树，不然已经打开的就关闭了
-            //reflushServiceTree();
+            //flushServiceTree();
         }
     }
 
@@ -808,8 +812,7 @@ public class HiveTools{
                  * 添加一个table到服务上
                  * 
                  * @param databaseTreeItem
-                 * @param table
-                 * @param fields
+                 * @param tableName
                  */
                 public void appendTableTree(TreeItem databaseTreeItem,String tableName){
                     TreeItem table = new TreeItem(databaseTreeItem, SWT.NONE);
@@ -869,7 +872,7 @@ public class HiveTools{
 
         switch(type){
             case ROOT:{
-                //reflushServiceTree();
+                //flushServiceTree();
             }
             break;
             case SERVER:{
