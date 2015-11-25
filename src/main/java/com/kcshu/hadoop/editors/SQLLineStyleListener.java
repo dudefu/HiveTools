@@ -33,7 +33,9 @@ public class SQLLineStyleListener implements LineStyleListener{
             "DROP","IF","EXISTS","SUM","FORMATTED",
             
             "LEFT","RIGHT","JOIN","OUTER",
-            
+
+            "DISTINCT",
+
             "NULL","=","<","+","-","*","/","%","&","||"
     };
 

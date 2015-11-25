@@ -51,6 +51,8 @@ public class images{
 
         public static final Image previous = get("go_previous");
         public static final Image next = get("go_next");
+
+        public static final Image style = get("style");//字体样式
     }
     
     public static class menu{

@@ -96,7 +96,6 @@ public class HiveTools{
                     display.sleep();
                 }
             }catch(Exception e){
-                e.printStackTrace();
             }
         }
         display.dispose();

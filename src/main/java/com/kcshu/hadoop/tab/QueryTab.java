@@ -12,8 +12,6 @@ import com.kcshu.hadoop.task.ExecuteCallBack;
 import com.kcshu.hadoop.utils.i18n;
 import com.kcshu.hadoop.utils.images;
 import org.apache.commons.io.IOUtils;
-import org.apache.poi.hssf.usermodel.HSSFRichTextString;
-import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.*;
@@ -21,6 +19,8 @@ import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -42,6 +42,9 @@ import java.util.regex.Pattern;
  * @version 1.0 & 2014年10月15日 下午3:04:36
  */
 public class QueryTab extends AbstractTab{
+
+    protected static Font useFont = SWTResourceManager.getFont("Consolas",14,SWT.NORMAL);;
+
     private ToolItem execute;//执行，
     private SelectionAdapter executeAction;
     
@@ -55,11 +58,11 @@ public class QueryTab extends AbstractTab{
     private SelectionAdapter openAction;
     
     private ToolItem export;//导出
-    private SelectionAdapter exportAction;
 
     private ToolItem format;//格式化SQL
-    private SelectionAdapter formatAction;
-    
+
+    private ToolItem fontStyle;//字体样式
+
     //上一页,下一页
     private ToolItem previous,next;
     private SelectionAdapter previousAction,nextAction;
@@ -82,7 +85,7 @@ public class QueryTab extends AbstractTab{
     @Override
     public void initSubView(Composite composite){
         composite.setLayout(new GridLayout(1, false));
-        initMenu(composite);
+        initToolBar(composite);
         initRightPopMenu();
 
         SashForm borderForm = new SashForm(composite, SWT.VERTICAL);
@@ -127,7 +130,7 @@ public class QueryTab extends AbstractTab{
         return menuitem;
     }
 
-    public void initMenu(Composite parent){
+    public void initToolBar(Composite parent){
         ToolBar tb = new ToolBar(parent, SWT.NONE);
         tb.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 
@@ -188,13 +191,12 @@ public class QueryTab extends AbstractTab{
         export.setText(i18n.menu.console.export);
         export.setImage(images.console.export);
         export.setEnabled(false);
-        exportAction = new SelectionAdapter(){
+        export.addSelectionListener(new SelectionAdapter(){
             @Override
             public void widgetSelected(SelectionEvent e){
                 exportExcel(false);
             }
-        };
-        export.addSelectionListener(exportAction);
+        });
 
         new ToolItem(tb, SWT.SEPARATOR | SWT.BORDER);
 
@@ -237,6 +239,40 @@ public class QueryTab extends AbstractTab{
         };
         next.addSelectionListener(nextAction);
 */
+
+        fontStyle = new ToolItem(tb, SWT.PUSH);
+        fontStyle.setText(i18n.menu.console.style);
+        fontStyle.setImage(images.console.style);
+        fontStyle.addSelectionListener(new SelectionAdapter(){
+            @Override
+            public void widgetSelected(SelectionEvent e){
+                setFontStyle(0);
+            }
+        });
+    }
+
+    protected void setFontStyle(int appendHeight){
+        if(appendHeight == 0){
+            FontDialog fontDialog = new FontDialog(Display.getCurrent().getActiveShell());
+            FontData fontData = fontDialog.open();
+            if(fontData != null){
+                String fontName = fontData.getName();
+                int fontStyle = fontData.getStyle();
+                int fontHeight = fontData.getHeight();
+                useFont = SWTResourceManager.getFont(fontName,fontHeight,fontStyle);
+                inputCmd.setFont(useFont);
+            }
+        }else{
+            FontData[] fontDatas = inputCmd.getFont().getFontData();
+            for (FontData fontData : fontDatas){
+                int height = fontData.getHeight() + appendHeight;
+                if(height < 8){
+                    height = 8;
+                }
+                fontData.setHeight(height);
+            }
+            inputCmd.setFont(new Font(Display.getCurrent(),fontDatas));
+        }
     }
 
     protected void exportExcel(boolean isSelected){
@@ -300,8 +336,13 @@ public class QueryTab extends AbstractTab{
     public void initEditor(SashForm sashForm){
         inputCmd = new MyStyledText(sashForm, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
         inputCmd.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        inputCmd.setFont(SWTResourceManager.getFont("凌晨依然", 11, SWT.NORMAL));
-        
+
+        //is not for myself, is open, os it's a bug.
+        //inputCmd.setFont(SWTResourceManager.getFont("凌晨依然", 11, SWT.NORMAL));
+        if(useFont != null){
+            inputCmd.setFont(useFont);
+        }
+
         inputCmd.addExtendedModifyListener(new ExtendedModifyListener(){
             @Override
             public void modifyText(ExtendedModifyEvent event){
@@ -340,6 +381,15 @@ public class QueryTab extends AbstractTab{
                     //打开
                     case SWT.F10: if(open.isEnabled()) openAction.widgetSelected(null); break;
                     default: break;
+                }
+            }
+        });
+
+        inputCmd.addMouseWheelListener(new MouseWheelListener() {
+            @Override
+            public void mouseScrolled(MouseEvent e) {
+                if((e.stateMask & SWT.CONTROL) > 0){
+                    setFontStyle(e.count);
                 }
             }
         });

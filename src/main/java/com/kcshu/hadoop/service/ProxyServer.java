@@ -50,7 +50,6 @@ public class ProxyServer
             try{
                 sessions.get(server).disconnect();
             }catch (Exception e){
-                e.printStackTrace();
             }
             sessions.remove(server);
         }

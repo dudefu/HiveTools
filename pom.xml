@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.kcshu.hadoop</groupId>
 	<artifactId>hivetools</artifactId>
-	<version>0.1.3</version>
+	<version>0.1.5</version>
 	<name>HiveTools</name>
 	<description>Hive客户端工具台</description>
 
@@ -35,6 +35,16 @@
 					<artifactId>org.eclipse.swt.gtk.linux.x86_64</artifactId>
 					<version>4.3</version>
 				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>mac</id>
+			<dependencies>
+                <dependency>
+                    <groupId>org.eclipse.swt.org.eclipse.swt.cocoa.macosx.x86_64.4.3.swt</groupId>
+                    <artifactId>org.eclipse.swt.cocoa.macosx.x86_64</artifactId>
+                    <version>4.3</version>
+                </dependency>
 			</dependencies>
 		</profile>
 	</profiles>

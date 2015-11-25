@@ -88,7 +88,6 @@ public class ServerService{
             try{
                 future.cancel(true);
             }catch(Exception e){
-                e.printStackTrace();
             }
             ServerManager.tasks.remove(uuid);
         }
@@ -101,7 +100,6 @@ public class ServerService{
             hive.showDatabases();
             return true;
         }catch(Exception e) {
-            e.printStackTrace();
             return false;
         }
     }

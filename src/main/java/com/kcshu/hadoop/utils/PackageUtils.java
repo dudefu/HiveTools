@@ -194,7 +194,6 @@ public class PackageUtils{
             }
             jarFile.close();
         }catch(Exception e){
-            e.printStackTrace();
         }
         return myClassName;
     }
