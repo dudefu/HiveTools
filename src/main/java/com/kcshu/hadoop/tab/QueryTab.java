@@ -367,6 +367,14 @@ public class QueryTab extends AbstractTab{
         inputCmd.setKeyBinding('Y' | SWT.CTRL, ActionCode.REDO);
         inputCmd.setKeyBinding('F' | SWT.CTRL, ActionCode.CLEAR);
         inputCmd.setKeyBinding('D' | SWT.CTRL, ActionCode.DELETE);
+
+        //is for mac
+        inputCmd.setKeyBinding('A' | SWT.COMMAND, ST.SELECT_ALL);
+        inputCmd.setKeyBinding('Z' | SWT.COMMAND, ActionCode.UNDO);
+        inputCmd.setKeyBinding('Y' | SWT.COMMAND, ActionCode.REDO);
+        inputCmd.setKeyBinding('F' | SWT.COMMAND, ActionCode.CLEAR);
+        inputCmd.setKeyBinding('D' | SWT.COMMAND, ActionCode.DELETE);
+
         inputCmd.addKeyListener(new KeyAdapter(){
             @Override
             public void keyReleased(KeyEvent e){

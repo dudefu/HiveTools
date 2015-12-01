@@ -3,6 +3,9 @@ HiveTools
 =========
 HiveServer2 JDBC Tools (hive 0.12.+)
 
+v0.1.6
+fixbug mac can't support copy/delete/paste
+
 v0.1.5
 1. Support the MAC system .
 2. Allows you to set the font style .
