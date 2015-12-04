@@ -21,6 +21,7 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.GlyphMetrics;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -313,7 +314,7 @@ public class QueryTab extends AbstractTab{
 
     protected void openFile(){
         FileDialog dialog = new FileDialog(tabFolder.getShell());
-        dialog.setFilterExtensions(new String[]{"*.sql", "*.hql","*.*"});
+        dialog.setFilterExtensions(new String[]{"*.hql", "*.sql", "*.*"});
         String file = dialog.open();
         if(file != null){
             self.setText(new java.io.File(file).getName());
@@ -336,6 +337,36 @@ public class QueryTab extends AbstractTab{
     public void initEditor(SashForm sashForm){
         inputCmd = new MyStyledText(sashForm, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
         inputCmd.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+
+        inputCmd.addLineStyleListener(new LineStyleListener() {
+            @Override
+            public void lineGetStyle(LineStyleEvent event) {
+                // Using ST.BULLET_NUMBER sometimes results in weird alignment.
+                //event.bulletIndex = styledText.getLineAtOffset(event.lineOffset);
+                StyleRange styleRange = new StyleRange();
+                styleRange.foreground = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
+                styleRange.background = Display.getCurrent().getSystemColor(SWT.COLOR_YELLOW);
+                styleRange.font = inputCmd.getFont();
+
+                int maxLine = inputCmd.getLineCount();
+                int bulletLength = Integer.toString(maxLine).length();
+                // Width of number character is half the height in monospaced font, add 1 character width for right padding.
+                int bulletWidth = (bulletLength + 4) * inputCmd.getLineHeight() / 2;
+                styleRange.metrics = new GlyphMetrics(0, 0, bulletWidth);
+                event.bullet = new Bullet(ST.BULLET_TEXT, styleRange);
+
+                // getLineAtOffset() returns a zero-based line index.
+                int bulletLine = inputCmd.getLineAtOffset(event.lineOffset) + 1;
+                event.bullet.text = String.format(" %-" + (bulletLength+1) + "s ", bulletLine);
+            }
+        });
+        inputCmd.addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e) {
+                // For line number redrawing.
+                inputCmd.redraw();
+            }
+        });
 
         //is not for myself, is open, os it's a bug.
         //inputCmd.setFont(SWTResourceManager.getFont("凌晨依然", 11, SWT.NORMAL));
@@ -378,13 +409,13 @@ public class QueryTab extends AbstractTab{
         inputCmd.addKeyListener(new KeyAdapter(){
             @Override
             public void keyReleased(KeyEvent e){
-                switch(e.keyCode | e.stateMask){ 
+                switch(e.keyCode | e.stateMask){
                     //执行
                     case SWT.F9: if(execute.isEnabled()) executeAction.widgetSelected(null); break;
                     //停止
                     case SWT.F7: if(stop.isEnabled()) stopAction.widgetSelected(null);  break;
                     //保存
-                    case 's' | SWT.CTRL : 
+                    case 's' | SWT.CTRL :
                     case SWT.F6: if(save.isEnabled()) saveAction.widgetSelected(null); break;
                     //打开
                     case SWT.F10: if(open.isEnabled()) openAction.widgetSelected(null); break;
@@ -569,9 +600,12 @@ public class QueryTab extends AbstractTab{
             @Override
             public void keyPressed(KeyEvent e) {
             switch(e.keyCode | e.stateMask){
+                case 's' | SWT.COMMAND://MAC
                 case 's' | SWT.CTRL :{ //保存
                     exportExcel(true);
                 }break;
+
+                case 'c' | SWT.COMMAND ://MAC
                 case 'c' | SWT.CTRL :{
                     copyTableSelect();
                 }break;
