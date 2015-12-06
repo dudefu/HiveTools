@@ -5,6 +5,7 @@ HiveServer2 JDBC Tools (hive 0.12.+)
 
 v0.1.6
 fixbug mac can't support copy/delete/paste
+In the editor to add different colors
 
 v0.1.5
 1. Support the MAC system .

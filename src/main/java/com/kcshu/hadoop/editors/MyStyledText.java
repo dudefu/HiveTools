@@ -1,8 +1,10 @@
 package com.kcshu.hadoop.editors;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.ST;
-import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.custom.*;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.graphics.GlyphMetrics;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -23,6 +25,59 @@ public class MyStyledText extends StyledText
     public MyStyledText(Composite parent, int style)
     {
         super(parent, style);
+        final StyledText inputCmd = this;
+
+        inputCmd.addLineStyleListener(new SQLLineStyleListener());
+
+        //绑定剪切，复制，粘贴快捷键
+        //绑定快捷键
+        inputCmd.setKeyBinding('A' | SWT.CTRL, ST.SELECT_ALL);
+        inputCmd.setKeyBinding('Z' | SWT.CTRL, ActionCode.UNDO);
+        inputCmd.setKeyBinding('Y' | SWT.CTRL, ActionCode.REDO);
+        inputCmd.setKeyBinding('F' | SWT.CTRL, ActionCode.CLEAR);
+        inputCmd.setKeyBinding('D' | SWT.CTRL, ActionCode.DELETE);
+        //is for mac
+        inputCmd.setKeyBinding('A' | SWT.COMMAND, ST.SELECT_ALL);
+        inputCmd.setKeyBinding('Z' | SWT.COMMAND, ActionCode.UNDO);
+        inputCmd.setKeyBinding('Y' | SWT.COMMAND, ActionCode.REDO);
+        inputCmd.setKeyBinding('F' | SWT.COMMAND, ActionCode.CLEAR);
+        inputCmd.setKeyBinding('D' | SWT.COMMAND, ActionCode.DELETE);
+
+        //重做，撤销内容保存
+        undoManager = new UndoManager(50);
+        undoManager.connect(inputCmd);
+        this.setUndoManager(undoManager);
+
+        //show line number
+        inputCmd.addLineStyleListener(new LineStyleListener() {
+            @Override
+            public void lineGetStyle(LineStyleEvent event) {
+                // Using ST.BULLET_NUMBER sometimes results in weird alignment.
+                //event.bulletIndex = styledText.getLineAtOffset(event.lineOffset);
+                StyleRange styleRange = new StyleRange();
+                styleRange.foreground = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
+                styleRange.background = Display.getCurrent().getSystemColor(SWT.COLOR_YELLOW);
+                styleRange.font = inputCmd.getFont();
+
+                int maxLine = inputCmd.getLineCount();
+                int bulletLength = Integer.toString(maxLine).length();
+                // Width of number character is half the height in monospaced font, add 1 character width for right padding.
+                int bulletWidth = (bulletLength + 1) * inputCmd.getLineHeight() / 2;
+                styleRange.metrics = new GlyphMetrics(0, 0, bulletWidth);
+                event.bullet = new Bullet(ST.BULLET_TEXT, styleRange);
+
+                // getLineAtOffset() returns a zero-based line index.
+                int bulletLine = inputCmd.getLineAtOffset(event.lineOffset) + 1;
+                event.bullet.text = String.format("%-" + (bulletLength) + "s ", bulletLine);
+            }
+        });
+        inputCmd.addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e) {
+                // For line number redrawing.
+                inputCmd.redraw();
+            }
+        });
     }
 
     /*

@@ -2,9 +2,6 @@ package com.kcshu.hadoop.tab;
 
 import com.kcshu.hadoop.domain.NodeType;
 import com.kcshu.hadoop.editors.MyStyledText;
-import com.kcshu.hadoop.editors.MyStyledText.ActionCode;
-import com.kcshu.hadoop.editors.SQLLineStyleListener;
-import com.kcshu.hadoop.editors.UndoManager;
 import com.kcshu.hadoop.export.Excel;
 import com.kcshu.hadoop.service.ServerManager;
 import com.kcshu.hadoop.task.CallBack;
@@ -21,7 +18,6 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
-import org.eclipse.swt.graphics.GlyphMetrics;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -338,42 +334,15 @@ public class QueryTab extends AbstractTab{
         inputCmd = new MyStyledText(sashForm, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
         inputCmd.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 
-        inputCmd.addLineStyleListener(new LineStyleListener() {
-            @Override
-            public void lineGetStyle(LineStyleEvent event) {
-                // Using ST.BULLET_NUMBER sometimes results in weird alignment.
-                //event.bulletIndex = styledText.getLineAtOffset(event.lineOffset);
-                StyleRange styleRange = new StyleRange();
-                styleRange.foreground = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
-                styleRange.background = Display.getCurrent().getSystemColor(SWT.COLOR_YELLOW);
-                styleRange.font = inputCmd.getFont();
-
-                int maxLine = inputCmd.getLineCount();
-                int bulletLength = Integer.toString(maxLine).length();
-                // Width of number character is half the height in monospaced font, add 1 character width for right padding.
-                int bulletWidth = (bulletLength + 4) * inputCmd.getLineHeight() / 2;
-                styleRange.metrics = new GlyphMetrics(0, 0, bulletWidth);
-                event.bullet = new Bullet(ST.BULLET_TEXT, styleRange);
-
-                // getLineAtOffset() returns a zero-based line index.
-                int bulletLine = inputCmd.getLineAtOffset(event.lineOffset) + 1;
-                event.bullet.text = String.format(" %-" + (bulletLength+1) + "s ", bulletLine);
-            }
-        });
-        inputCmd.addModifyListener(new ModifyListener() {
-            @Override
-            public void modifyText(ModifyEvent e) {
-                // For line number redrawing.
-                inputCmd.redraw();
-            }
-        });
-
-        //is not for myself, is open, os it's a bug.
-        //inputCmd.setFont(SWTResourceManager.getFont("凌晨依然", 11, SWT.NORMAL));
         if(useFont != null){
             inputCmd.setFont(useFont);
+        } else {
+            //is not for myself, is open, os it's a bug.
+            //so,use it for myself.
+            inputCmd.setFont(SWTResourceManager.getFont("凌晨依然", 11, SWT.NORMAL));
         }
 
+        //监听文本内容改变事件。
         inputCmd.addExtendedModifyListener(new ExtendedModifyListener(){
             @Override
             public void modifyText(ExtendedModifyEvent event){
@@ -390,36 +359,30 @@ public class QueryTab extends AbstractTab{
                 }
             }
         });
-        inputCmd.addLineStyleListener(new SQLLineStyleListener());
-
-        //绑定快捷键
-        inputCmd.setKeyBinding('A' | SWT.CTRL, ST.SELECT_ALL);
-        inputCmd.setKeyBinding('Z' | SWT.CTRL, ActionCode.UNDO);
-        inputCmd.setKeyBinding('Y' | SWT.CTRL, ActionCode.REDO);
-        inputCmd.setKeyBinding('F' | SWT.CTRL, ActionCode.CLEAR);
-        inputCmd.setKeyBinding('D' | SWT.CTRL, ActionCode.DELETE);
-
-        //is for mac
-        inputCmd.setKeyBinding('A' | SWT.COMMAND, ST.SELECT_ALL);
-        inputCmd.setKeyBinding('Z' | SWT.COMMAND, ActionCode.UNDO);
-        inputCmd.setKeyBinding('Y' | SWT.COMMAND, ActionCode.REDO);
-        inputCmd.setKeyBinding('F' | SWT.COMMAND, ActionCode.CLEAR);
-        inputCmd.setKeyBinding('D' | SWT.COMMAND, ActionCode.DELETE);
 
         inputCmd.addKeyListener(new KeyAdapter(){
             @Override
             public void keyReleased(KeyEvent e){
-                switch(e.keyCode | e.stateMask){
+                switch (e.keyCode | e.stateMask) {
                     //执行
-                    case SWT.F9: if(execute.isEnabled()) executeAction.widgetSelected(null); break;
+                    case SWT.F9:
+                        if (execute.isEnabled()) executeAction.widgetSelected(null);
+                        break;
                     //停止
-                    case SWT.F7: if(stop.isEnabled()) stopAction.widgetSelected(null);  break;
+                    case SWT.F7:
+                        if (stop.isEnabled()) stopAction.widgetSelected(null);
+                        break;
                     //保存
-                    case 's' | SWT.CTRL :
-                    case SWT.F6: if(save.isEnabled()) saveAction.widgetSelected(null); break;
+                    case 's' | SWT.CTRL:
+                    case SWT.F6:
+                        if (save.isEnabled()) saveAction.widgetSelected(null);
+                        break;
                     //打开
-                    case SWT.F10: if(open.isEnabled()) openAction.widgetSelected(null); break;
-                    default: break;
+                    case SWT.F10:
+                        if (open.isEnabled()) openAction.widgetSelected(null);
+                        break;
+                    default:
+                        break;
                 }
             }
         });
@@ -427,17 +390,12 @@ public class QueryTab extends AbstractTab{
         inputCmd.addMouseWheelListener(new MouseWheelListener() {
             @Override
             public void mouseScrolled(MouseEvent e) {
-                if((e.stateMask & SWT.CONTROL) > 0){
+                if ((e.stateMask & SWT.CONTROL) > 0) {
                     setFontStyle(e.count);
                 }
             }
         });
 
-        UndoManager undoManager = new UndoManager(50);
-        undoManager.connect(inputCmd);
-
-        inputCmd.setUndoManager(undoManager);
-        
         defaultSql();
 
         //TASK 输入框最大化
@@ -460,7 +418,7 @@ public class QueryTab extends AbstractTab{
                         }else{
                             where.append("\n\tAND");
                         }
-                        where.append(child.getText()).append(" = '' ");
+                        where.append(" ").append(child.getText()).append(" = '' ");
                     }else{
                         if( i != 0 ){
                             hql.append(",");
@@ -482,10 +440,9 @@ public class QueryTab extends AbstractTab{
         outDataTab.addMouseListener(new MouseAdapter(){
             @Override
             public void mouseDoubleClick(MouseEvent e){
-                if(getSashForm().getMaximizedControl() != outDataTab){
+                if (getSashForm().getMaximizedControl() != outDataTab) {
                     getSashForm().setMaximizedControl(outDataTab);
-                }
-                else{
+                } else {
                     getSashForm().setMaximizedControl(null);
                 }
             }
@@ -494,7 +451,7 @@ public class QueryTab extends AbstractTab{
             @Override
             public void close(CTabFolderEvent event) {
                 super.close(event);
-                if(outDataTab.getItemCount() == 1){//最后关闭的那个
+                if (outDataTab.getItemCount() == 1) {//最后关闭的那个
                     getSashForm().setMaximizedControl(inputCmd);
                 }
             }

@@ -609,7 +609,7 @@ public class HiveTools{
         sashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
         initTree(sashForm);
         initTab(sashForm);
-        sashForm.setWeights(new int[]{1, 4});
+        sashForm.setWeights(new int[]{1, 5});
     }
 
     /**
