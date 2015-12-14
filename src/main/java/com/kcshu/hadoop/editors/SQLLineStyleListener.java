@@ -61,8 +61,8 @@ public class SQLLineStyleListener implements LineStyleListener{
 
         //有内容处理颜色值
         List<StyleRange> styles = new ArrayList<StyleRange>();
-        if (lineText.startsWith("--")) {
-            Pattern pattern = Pattern.compile("--[\\s]*(set|SET)[\\s]*([a-zA-Z0-9_]*)[\\s]*=[\\s]*(.*)");
+        if (lineText.trim().startsWith("--")) {
+            Pattern pattern = Pattern.compile("[\\s]*--[\\s]*(set|SET)[\\s]*([a-zA-Z0-9_]*)[\\s]*=[\\s]*(.*)");
             Matcher m = pattern.matcher(lineText);
             if (m.matches()) {
                 //set

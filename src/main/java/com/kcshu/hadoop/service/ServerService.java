@@ -55,7 +55,7 @@ public class ServerService{
             @Override
             public void run(){
                 try{
-                    if( !ProxyServer.init().add(server) ) {
+                    if( server.isUseSshProxy() && !ProxyServer.init().add(server) ) {
                         back.onException(new Exception("未能代开代理地址"));
                         return;
                     }
