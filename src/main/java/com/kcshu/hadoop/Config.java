@@ -9,6 +9,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.kcshu.hadoop.domain.Server;
+import com.kcshu.hadoop.utils.OS;
 
 /**
  *
@@ -27,10 +28,14 @@ public class Config{
 
     protected static void load(){
         File folder = new File(System.getProperty("user.dir"));
+        if(OS.isMacOS() || OS.isMacOSX()){
+            folder = new File(System.getProperty("user.home"));
+        }
+
         if(!folder.exists()){
             folder.mkdirs();
         }
-        File profile = new File(folder, "service.properties");
+        File profile = new File(folder, "hivetools.properties");
         try{
             //fix error , not load the config file if the config file named service.properties is not exstis.
             if(profile.exists()) {

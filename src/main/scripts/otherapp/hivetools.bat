@@ -1,0 +1,1 @@
+start java -cp libs/*.jar com.kcshu.hadoop.HiveTools
