@@ -1,5 +1,8 @@
 package com.kcshu.hadoop;
 
+import com.kcshu.hadoop.domain.Server;
+import com.kcshu.hadoop.utils.OS;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -7,9 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-
-import com.kcshu.hadoop.domain.Server;
-import com.kcshu.hadoop.utils.OS;
 
 /**
  *
@@ -26,16 +26,20 @@ public class Config{
         }
     }
 
-    protected static void load(){
+    protected static final File configDir() {
         File folder = new File(System.getProperty("user.dir"));
-        if(OS.isMacOS() || OS.isMacOSX()){
+        if (OS.isMacOS() || OS.isMacOSX()) {
             folder = new File(System.getProperty("user.home"));
         }
 
-        if(!folder.exists()){
+        if (!folder.exists()) {
             folder.mkdirs();
         }
-        File profile = new File(folder, "hivetools.properties");
+        return folder;
+    }
+
+    protected static void load(){
+        File profile = new File(configDir(), "hivetools.properties");
         try{
             //fix error , not load the config file if the config file named service.properties is not exstis.
             if(profile.exists()) {
@@ -46,11 +50,7 @@ public class Config{
     }
 
     protected static void write(){
-        File folder = new File(System.getProperty("user.dir"));
-        if(!folder.exists()){
-            folder.mkdirs();
-        }
-        File profile = new File(folder, "service.properties");
+        File profile = new File(configDir(), "hivetools.properties");
         try{
             configs.store(new FileOutputStream(profile), "");
         }catch(Exception e){

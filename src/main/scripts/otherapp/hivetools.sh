@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-java -cp libs/*.jar com.kcshu.hadoop.HiveTools
+call java -cp libs/*.jar com.kcshu.hadoop.HiveTools

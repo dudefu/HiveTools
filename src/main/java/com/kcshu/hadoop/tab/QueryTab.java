@@ -79,6 +79,8 @@ public class QueryTab extends AbstractTab{
     }
 
 
+    private boolean isRunSelect = false;
+
     @Override
     public void initSubView(Composite composite){
         composite.setLayout(new GridLayout(1, false));
@@ -363,9 +365,11 @@ public class QueryTab extends AbstractTab{
         inputCmd.addKeyListener(new KeyAdapter(){
             @Override
             public void keyReleased(KeyEvent e){
-                switch (e.keyCode | e.stateMask) {
+                switch (e.keyCode) {
                     //执行
                     case SWT.F9:
+                        QueryTab.this.isRunSelect = (e.stateMask & SWT.CTRL) != 0;
+
                         if (execute.isEnabled()) executeAction.widgetSelected(null);
                         break;
                     //停止
@@ -469,6 +473,9 @@ public class QueryTab extends AbstractTab{
         return sashForm;
     }
 
+    /**
+     * 执行任务
+     */
     public void executeTask(){
         execute.setImage(images.console.executeing);
         execute.setText(i18n.menu.console.executeing);
@@ -484,7 +491,12 @@ public class QueryTab extends AbstractTab{
 
         Map<String,String> map = new HashMap<>();
 
-        String hql = inputCmd.getText().trim();
+        String hql = "";
+        if(this.isRunSelect){//执行选择区域的内容
+            hql = inputCmd.getSelectionText().trim();
+        }else{
+            hql = inputCmd.getText().trim();
+        }
         String[] lines = hql.split("(\r\n|\n)");
         Pattern pattern = Pattern.compile("--[\\s]*(set|SET)[\\s]*([a-zA-Z0-9_]*)[\\s]*=[\\s]*(.*)");
         for (String line : lines){

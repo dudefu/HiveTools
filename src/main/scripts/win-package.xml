@@ -1,0 +1,27 @@
+<assembly xmlns="http://maven.apache.org/POM/4.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/assembly-1.0.0.xsd">
+
+    <id>full</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+
+    <fileSets>
+        <fileSet>
+            <outputDirectory>${project.name}</outputDirectory>
+            <directory>src/scripts/otherapp</directory>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>${project.name}/libs</outputDirectory>
+            <directory>${project.build.directory}/libs</directory>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>${project.name}/libs</outputDirectory>
+            <directory>${project.build.directory}</directory>
+            <includes>
+                <include>${project.build.finalName}.jar</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+</assembly>
