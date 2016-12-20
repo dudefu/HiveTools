@@ -365,11 +365,11 @@ public class QueryTab extends AbstractTab{
         inputCmd.addKeyListener(new KeyAdapter(){
             @Override
             public void keyReleased(KeyEvent e){
-                switch (e.keyCode) {
+                switch (e.keyCode | e.stateMask) {
                     //执行
                     case SWT.F9:
+                    case SWT.F9  | SWT.CTRL:
                         QueryTab.this.isRunSelect = (e.stateMask & SWT.CTRL) != 0;
-
                         if (execute.isEnabled()) executeAction.widgetSelected(null);
                         break;
                     //停止

@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.kcshu.hadoop</groupId>
 	<artifactId>hivetools</artifactId>
-	<version>0.1.6</version>
+	<version>0.1.7</version>
 	<name>HiveTools</name>
 	<description>Hive客户端工具台</description>
 

@@ -188,8 +188,9 @@ public class HiveServer{
                 for(int i = 0; i < cc; i++){
                     header[i] = rsmd.getColumnName(i + 1);
                 }
+                int idx = 0;
                 grids.add(header);
-                while(rs.next()){
+                while(rs.next() && (idx++) < 1000){
                     String[] columns = new String[cc];
                     for(int i = 0; i < cc; i++){
                         columns[i] = rs.getString(i + 1);
